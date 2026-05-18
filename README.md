@@ -6,9 +6,7 @@ Luguan is a programming language project designed to provide a complicated, unex
 
 - Dirty and concise syntax
 - Weak typing with type inference
-- Modular standard library
-- Easy compilation and execution
-- Built-in support for concurrency and async workflows
+- Inline Brainfuck
 
 ## Getting Started
 
