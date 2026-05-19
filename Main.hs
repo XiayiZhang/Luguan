@@ -6,7 +6,7 @@ import Brainfuck (bf)
 
 main :: IO ()
 main = do
-	print $ bf [0,0,0] "+++."
+	print $ bf [0,0,0] "++++++++++[>+++++++>++++++++++>+++>+<<<<-]>++.>+.+++++++..+++.>++.<<+++++++++++++++.>.+++.------.--------.>+."
 	args <- getArgs
 	case args of
 		[path] -> do

@@ -12,7 +12,7 @@ Luguan is a programming language project designed to provide a complicated, unex
 
 1. Clone the repository:
     ```
-    git clone https://github.com/yourusername/Luguan.git
+    git clone https://github.com/XiayiZhang/Luguan.git
     ```
 
 2. Build the compiler/interpreter:
