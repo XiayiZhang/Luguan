@@ -5,7 +5,7 @@ import System.FilePath (takeExtension)
 import Data.Char (toLower)
 import Text.Read (readMaybe)
 import Control.Exception (try, SomeException)
-import Text.Parsec
+import Text.Parsec hiding (try)
 import qualified Text.Parsec.Token as Token
 import Text.Parsec.Language (emptyDef)
 
