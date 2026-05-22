@@ -28,9 +28,18 @@ Luguan is a programming language project designed to provide a complicated, unex
 
 ## Example Program
 
+
+- 
 ```
 if (true) { print 42; } else { print 0; }
 ```
+- 
+```
+arr = [0, 1, 2, 3]
+bf arr "+>+>+>+[.<]"
+// output [1, 2, 3, 4]
+```
+
 
 ## License
 

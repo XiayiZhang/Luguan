@@ -45,7 +45,7 @@ langDef = emptyDef
   , Token.identLetter     = alphaNum
   , Token.reservedNames   = ["if", "else", "then", "while", "input", "print",
                              "null", "true", "false", "func", "int", "bool",
-                             "optional", "some"]
+                             "optional", "some", "bf"]
   , Token.reservedOpNames = ["=", "+", "-", "*", "/", "==", "!=", "<", "<=",
                              ">", ">=", "&&", "||", ":", "!"]
   , Token.caseSensitive   = True
@@ -118,6 +118,7 @@ stmtParser = choice
     , inputStmtParser
     , printStmtParser
     , assignStmtParser
+    , brainfuckStmtParser
     , blockStmtParser
     ]
 
@@ -143,6 +144,9 @@ assignStmtParser = Assign <$> identifier <*> (reservedOp "=" *> exprParser <* se
 
 blockStmtParser :: Parsec String () Stmt
 blockStmtParser = Block <$> blockParser
+
+brainfuckStmtParser :: Parsec String () Stmt
+brainfuckStmtParser = Assign <$> (reserved "bf" *> identifier) <*> (reservedOp "=" *> (ExprFuncCall "bf" <$> parens (commaSep exprParser)) <* semi)
 
 exprParser :: Parsec String () Expr
 exprParser = buildExpressionParser operatorTable termParser
