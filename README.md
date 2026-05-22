@@ -26,6 +26,11 @@ Luguan is a programming language project designed to provide a complicated, unex
     ./luguan ./hello.🦌🧪️
     ```
 
+## Example Program
+
+```
+if (true) { print 42; } else { print 0; }
+```
 
 ## License
 
