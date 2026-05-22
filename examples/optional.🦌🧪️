@@ -1,0 +1,1 @@
+y = null; z = some(1); print z; func maybe(): optional int { returnType = null; }

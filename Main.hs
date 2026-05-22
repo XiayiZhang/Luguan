@@ -1,7 +1,7 @@
 module Main where
 
 import System.Environment (getArgs)
-import Parser (readProgramFromFile)
+import Parser (readlgFile, readProgramFromFile)
 import Brainfuck (bf)
 
 main :: IO ()
