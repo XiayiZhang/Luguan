@@ -6,6 +6,7 @@ data Lit
     = LitInt Int
     | LitBool Bool
     | LitNull
+    | LitString String
     deriving (Show, Eq, Read)
 
 data Expr
@@ -17,6 +18,7 @@ data Expr
     | ExprNull
     | ExprSome Expr
     | ExprMatch Expr Expr Expr
+    | ExprList [Expr]
     deriving (Show, Eq, Read)
 
 data BinOp

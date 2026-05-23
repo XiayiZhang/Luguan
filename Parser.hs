@@ -45,7 +45,7 @@ langDef = emptyDef
   , Token.identLetter     = alphaNum
   , Token.reservedNames   = ["if", "else", "then", "while", "input", "print",
                              "null", "true", "false", "func", "int", "bool",
-                             "optional", "some", "bf"]
+                             "optional", "some"]
   , Token.reservedOpNames = ["=", "+", "-", "*", "/", "==", "!=", "<", "<=",
                              ">", ">=", "&&", "||", ":", "!"]
   , Token.caseSensitive   = True
@@ -53,6 +53,12 @@ langDef = emptyDef
 
 lexer :: Token.TokenParser ()
 lexer = Token.makeTokenParser langDef
+
+stringLiteral :: Parsec String () String
+stringLiteral = Token.stringLiteral lexer
+
+listLiteral :: Parsec String () [Expr]
+listLiteral = Token.brackets lexer (commaSep exprParser)
 
 identifier :: Parsec String () String
 identifier = Token.identifier lexer
@@ -118,7 +124,7 @@ stmtParser = choice
     , inputStmtParser
     , printStmtParser
     , assignStmtParser
-    , brainfuckStmtParser
+    --, brainfuckStmtParser
     , blockStmtParser
     ]
 
@@ -145,8 +151,8 @@ assignStmtParser = Assign <$> identifier <*> (reservedOp "=" *> exprParser <* se
 blockStmtParser :: Parsec String () Stmt
 blockStmtParser = Block <$> blockParser
 
-brainfuckStmtParser :: Parsec String () Stmt
-brainfuckStmtParser = Assign <$> (reserved "bf" *> identifier) <*> (reservedOp "=" *> (ExprFuncCall "bf" <$> parens (commaSep exprParser)) <* semi)
+--brainfuckStmtParser :: Parsec String () Stmt
+--brainfuckStmtParser = Assign <$> (reserved "bf" *> identifier) <*> (reservedOp "=" *> (ExprFuncCall "bf" <$> parens (commaSep exprParser)) <* semi)
 
 exprParser :: Parsec String () Expr
 exprParser = buildExpressionParser operatorTable termParser
@@ -179,6 +185,7 @@ termParser = choice
     , ExprLit <$> literalParser
     , ExprNull <$ reserved "null"
     , ExprSome <$> (reserved "some" *> parens exprParser)
+    , ExprList <$> listLiteral   
     ]
 
 funcCallParser :: Parsec String () Expr
@@ -188,6 +195,7 @@ literalParser :: Parsec String () Lit
 literalParser =  LitBool True <$ reserved "true"
              <|> LitBool False <$ reserved "false"
              <|> LitInt . fromInteger <$> integer
+             <|> LitString <$> stringLiteral 
 
 --  --------------------------------------------------------------------
 
