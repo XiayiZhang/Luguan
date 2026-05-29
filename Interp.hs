@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Interp
     ( runProgram
@@ -9,11 +10,14 @@ import Types
 import Parser
 import Control.Monad.Except
 import qualified Data.Map.Strict as Map
+import Brainfuck (bf)
 
 data Value
     = VInt Integer
     | VBool Bool
     | VUnit
+    | VString String
+    | VList [Value]
     deriving (Eq, Show)
 
 type Env = Map.Map String Value
@@ -89,6 +93,26 @@ evalExpr env expr =
             VBool v <- evalExpr env e
             pure (VBool (not v))
         ExprFuncCall _ _ -> throwError "函数调用未实现"
+        ExprFuncCall "bf" args -> do -- 2026.5.30 1:38
+            case args of
+                [listArg, strArg] -> do
+                    vList <- evalExpr env listArg
+                    vStr  <- evalExpr env strArg
+                    ints <- case vList of
+                        VList vs -> mapM extractInt vs
+                        _ -> throwError "bf arg1 must a list"
+                    s <- case vStr of
+                        VString str -> pure str
+                        _ -> throwError "bf arg2 must be a string"
+                    let ints' = map fromIntegral ints
+                    let result = bf ints' s
+                    pure (VList (map (VInt . fromIntegral) result))
+
+                _ -> throwError "内置函数 bf 需要两个参数: [Int] 和 String"
+            where
+                extractInt :: Value -> Eval Integer
+                extractInt (VInt n) = pure n
+                extractInt _        = throwError "列表中的元素不是整数"
         ExprNull -> pure VUnit
         ExprSome _ -> throwError "optional 暂不支持"
         ExprMatch _ _ _ -> throwError "match 表达式暂不支持"
@@ -130,3 +154,4 @@ showValue = \case
     VInt i -> show i
     VBool b -> show b
     VUnit -> "()"
+    VString s -> s
