@@ -29,11 +29,11 @@ Luguan is a programming language project designed to provide a complicated, unex
 ## Example Program
 
 
-- 
+- if-else
 ```
 if (true) { print 42; } else { print 0; }
 ```
-- 
+- brainfucker
 ```
 r = bf([0, 1, 2, 3], "+>+>+>+[.<]");
 print(r);
