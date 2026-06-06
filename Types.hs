@@ -19,6 +19,7 @@ data Expr
     | ExprSome Expr
     | ExprMatch Expr Expr Expr
     | ExprList [Expr]
+    |ExprString String
     deriving (Show, Eq, Read)
 
 data BinOp

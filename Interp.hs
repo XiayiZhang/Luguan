@@ -1,5 +1,6 @@
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# OPTIONS_GHC -Wno-incomplete-patterns #-}
 
 module Interp
     ( runProgram
@@ -92,7 +93,7 @@ evalExpr env expr =
         ExprNot e -> do
             VBool v <- evalExpr env e
             pure (VBool (not v))
-        ExprFuncCall _ _ -> throwError "函数调用未实现"
+        --ExprFuncCall _ _ -> throwError "函数调用未实现"
         ExprFuncCall "bf" args -> do -- 2026.5.30 1:38
             case args of
                 [listArg, strArg] -> do
@@ -108,22 +109,25 @@ evalExpr env expr =
                     let result = bf ints' s
                     pure (VList (map (VInt . fromIntegral) result))
 
-                _ -> throwError "内置函数 bf 需要两个参数: [Int] 和 String"
+                _ -> throwError "bf need 2 value [Int] & String"
             where
                 extractInt :: Value -> Eval Integer
                 extractInt (VInt n) = pure n
                 extractInt _        = throwError "列表中的元素不是整数"
         ExprNull -> pure VUnit
         ExprSome _ -> throwError "optional 暂不支持"
-        ExprMatch _ _ _ -> throwError "match 表达式暂不支持"
-        ExprList _ -> throwError "列表表达式暂不支持"
+        ExprMatch {} -> throwError "match 表达式暂不支持"
+        ExprString s -> pure (VString s)
+        ExprList es -> do
+            vs <- mapM (evalExpr env) es   -- 对每个子表达式求值，得到 [Value]
+            pure (VList vs)  
 
 evalLit :: Lit -> Eval Value
 evalLit = \case
     LitInt n -> pure (VInt (fromIntegral n))
     LitBool b -> pure (VBool b)
     LitNull -> pure VUnit
-    LitString _ -> throwError "字符串文字暂不支持"
+    LitString s -> pure (VString s)
 
 evalBinOp :: BinOp -> Value -> Value -> Eval Value
 evalBinOp op (VInt a) (VInt b) =
@@ -155,3 +159,4 @@ showValue = \case
     VBool b -> show b
     VUnit -> "()"
     VString s -> s
+    VList l -> show l
