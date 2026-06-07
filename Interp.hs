@@ -19,6 +19,7 @@ data Value
     | VUnit
     | VString String
     | VList [Value]
+    |VSome Value
     deriving (Eq, Show)
 
 type Env = Map.Map String Value
@@ -115,11 +116,13 @@ evalExpr env expr =
                 extractInt (VInt n) = pure n
                 extractInt _        = throwError "列表中的元素不是整数"
         ExprNull -> pure VUnit
-        ExprSome _ -> throwError "optional 暂不支持"
+        ExprSome s ->do
+            v <- evalExpr env s
+            pure (VSome v)
         ExprMatch {} -> throwError "match 表达式暂不支持"
         ExprString s -> pure (VString s)
         ExprList es -> do
-            vs <- mapM (evalExpr env) es   -- 对每个子表达式求值，得到 [Value]
+            vs <- mapM (evalExpr env) es
             pure (VList vs)  
 
 evalLit :: Lit -> Eval Value

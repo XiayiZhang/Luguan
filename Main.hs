@@ -15,7 +15,7 @@ main = do
 			res <- readProgramFromFile "🦌🧪️" path--读取".🦌🧪️"文件
 			case res of
 				Right prog -> do
-					putStrLn $ "[debug]" ++ show prog -- delete this if not debug
+					-- putStrLn $ "[debug]" ++ show prog -- delete this if not debug
 					runProgram prog
 				Left err -> putStrLn $ "Error: " ++ err
 		_ -> putStrLn "Usage: Luguan <file>"
