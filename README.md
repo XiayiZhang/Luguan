@@ -23,7 +23,7 @@ Luguan is a programming language project designed to provide a complicated, unex
 
 3. Run a sample program:
     ```
-    ./luguan ./hello.🦌🧪️
+    ./Luguan ./hello.🦌🧪️
     ```
 
 ## Example Program
@@ -31,13 +31,17 @@ Luguan is a programming language project designed to provide a complicated, unex
 
 - if-else
 ```
-if (true) { print 42; } else { print 0; }
+if (true) { 
+    print 42; 
+} else { 
+    print 0; 
+}
 ```
 - brainfucker
 ```
-r = bf([0, 1, 2, 3], "+>+>+>+[.<]");
+r = bf([0, 1, 2], "++.>++.>++.");
 print(r);
-// output [1, 2, 3, 4]
+// output [VInt 2,VInt 3,VInt 4]
 ```
 
 
