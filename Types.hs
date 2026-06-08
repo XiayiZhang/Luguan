@@ -19,7 +19,8 @@ data Expr
     | ExprSome Expr
     | ExprMatch Expr Expr Expr
     | ExprList [Expr]
-    |ExprString String
+    | ExprString String
+    | ExprIndex Expr Expr
     deriving (Show, Eq, Read)
 
 data BinOp
@@ -35,6 +36,7 @@ data Stmt
     | Input VarName
     | Print Expr
     | Block [Stmt]
+    | AssignIndex Expr Expr Expr
     deriving (Show, Eq, Read)
 
 data Type = TypeInt | TypeBool |TypeOptional Type

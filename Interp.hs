@@ -79,6 +79,32 @@ evalStmt env stmt =
 
         Block stmts -> evalStmts env stmts
 
+        ExprIndex arrExpr idxExpr -> do
+            VList vec <- evalExpr env arrExpr
+            VInt idx <- evalExpr env idxExpr
+            let i = fromIntegral idx
+            if i < 0 || i >= length vec
+            then throwError "数组索引越界"
+            else pure (vec !! i)
+            
+        AssignIndex arrExpr idxExpr valExpr -> do
+            arrVal <- evalExpr env arrExpr
+            idxVal <- evalExpr env idxExpr
+            newVal <- evalExpr env valExpr
+            case (arrVal, idxVal) of
+                (VList vec, VInt idx) -> do
+                    let i = fromIntegral idx
+                        len = length vec
+                    if i < 0 || i >= len
+                        then throwError "Index out of bounds"
+                        else do
+                            let newVec = take i vec ++ [newVal] ++ drop (i+1) vec
+                    -- 假设 arrExpr 是变量（简化处理）
+                            case arrExpr of
+                                ExprVar name -> pure $ Map.insert name (VList newVec) env
+                                _ -> throwError "Left side of index assignment must be a variable"
+                _ -> throwError "Index assignment requires an array and an integer index"
+
 evalExpr :: Env -> Expr -> Eval Value
 evalExpr env expr =
     case expr of
