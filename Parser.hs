@@ -37,8 +37,8 @@ readProgramFromFile ext path = do
 
 langDef :: Token.LanguageDef ()
 langDef = emptyDef
-  { Token.commentStart    = "/*"
-  , Token.commentEnd      = "*/"
+  { Token.commentStart    = "？！"
+  , Token.commentEnd      = "！？"
   , Token.commentLine     = "//"
   , Token.nestedComments  = True
   , Token.identStart      = letter

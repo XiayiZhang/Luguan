@@ -79,13 +79,13 @@ evalStmt env stmt =
 
         Block stmts -> evalStmts env stmts
 
-        ExprIndex arrExpr idxExpr -> do
+        {-ExprIndex arrExpr idxExpr -> do
             VList vec <- evalExpr env arrExpr
             VInt idx <- evalExpr env idxExpr
             let i = fromIntegral idx
             if i < 0 || i >= length vec
             then throwError "数组索引越界"
-            else pure (vec !! i)
+            else pure (vec !! i)-}
             
         AssignIndex arrExpr idxExpr valExpr -> do
             arrVal <- evalExpr env arrExpr
