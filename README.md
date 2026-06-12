@@ -41,7 +41,10 @@ if (true) {
 ```
 r = bf([0, 1, 2], "++.>++.>++.");
 print(r);
-// output [VInt 2,VInt 3,VInt 4]
+？！
+inner function
+output [VInt 2,VInt 3,VInt 4]
+！？
 ```
 
 
