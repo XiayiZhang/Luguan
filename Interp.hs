@@ -28,6 +28,9 @@ type Eval a = ExceptT String IO a
 insertAt :: Int -> a -> [a] -> [a]
 insertAt i x xs = take i xs ++ [x] ++ drop i xs
 
+replaceAt :: [a] -> Int -> a -> [a]
+replaceAt xs i x = take i xs ++ [x] ++ drop (i + 1) xs
+
 runProgram :: Program -> IO ()
 runProgram prog = do
     result <- runExceptT (evalProgram Map.empty prog)
@@ -159,6 +162,21 @@ evalExpr env expr =
                                 else pure $ VList (insertAt i vElem xs)
                         _ -> throwError "insert expects a list and an integer index"
                 _ -> throwError "insert requires 3 arguments: list, index, element"
+        ExprFuncCall "replace" args -> do
+            case args of
+                [listExpr, idxExpr, elemExpr] -> do
+                    vList <- evalExpr env listExpr
+                    vIdx  <- evalExpr env idxExpr
+                    vElem <- evalExpr env elemExpr
+
+                    case (vList, vIdx) of
+                        (VList xs, VInt idx) -> do
+                            let i = fromIntegral idx
+                            if i < 0 || i > length xs   -- 允许在末尾插入（i == length）
+                                then throwError "replace out of bounds for insert"
+                                else pure $ VList (replaceAt xs i vElem)
+                        _ -> throwError "replace expects a list and an integer index"
+                _ -> throwError "replace requires 3 arguments: list, index, element"
         ExprNull -> pure VUnit
         ExprSome s ->do
             v <- evalExpr env s

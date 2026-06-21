@@ -16,7 +16,7 @@ Luguan is a programming language project designed to provide a complicated, unex
     git clone https://github.com/XiayiZhang/Luguan.git
     ```
 
-2. Build the compiler/interpreter:
+2. Build the interpreter:
 
     ```shell
     cd Luguan
