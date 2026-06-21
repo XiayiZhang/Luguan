@@ -25,6 +25,9 @@ data Value
 type Env = Map.Map String Value
 type Eval a = ExceptT String IO a
 
+insertAt :: Int -> a -> [a] -> [a]
+insertAt i x xs = take i xs ++ [x] ++ drop i xs
+
 runProgram :: Program -> IO ()
 runProgram prog = do
     result <- runExceptT (evalProgram Map.empty prog)
@@ -141,6 +144,21 @@ evalExpr env expr =
                 extractInt :: Value -> Eval Integer
                 extractInt (VInt n) = pure n
                 extractInt _        = throwError "列表中的元素不是整数"
+        ExprFuncCall "insert" args -> do
+            case args of
+                [listExpr, idxExpr, elemExpr] -> do
+                    vList <- evalExpr env listExpr
+                    vIdx  <- evalExpr env idxExpr
+                    vElem <- evalExpr env elemExpr
+
+                    case (vList, vIdx) of
+                        (VList xs, VInt idx) -> do
+                            let i = fromIntegral idx
+                            if i < 0 || i > length xs   -- 允许在末尾插入（i == length）
+                                then throwError "Index out of bounds for insert"
+                                else pure $ VList (insertAt i vElem xs)
+                        _ -> throwError "insert expects a list and an integer index"
+                _ -> throwError "insert requires 3 arguments: list, index, element"
         ExprNull -> pure VUnit
         ExprSome s ->do
             v <- evalExpr env s
