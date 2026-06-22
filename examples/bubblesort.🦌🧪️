@@ -1,6 +1,8 @@
 a = [2, 5, 1, 3, 9, 6, 8, 7, 4];
 b = 0;
 print(insert(a, 5, 5));
+print(delete(a, 5));
+print(read(a, 5));
 
 ？！
 while(b <= 9){
