@@ -1,14 +1,16 @@
 a = [2, 5, 1, 3, 9, 6, 8, 7, 4];
-b = 0;
-print(insert(a, 5, 5));
-print(delete(a, 5));
-print(read(a, 5));
-
-？！
-while(b <= 9){
-	if(bf(a, ".") >= bf(a, ">.")){
-		bf(a, "[->>>>>>>>+<<<<<<<<]");
-	} else {
-		b = b+1;
-	}
-}！？
+len = 9;
+d = 0;
+while (d < len - 1) {
+    b = 0;
+    while (b < len - 1 - d) {
+        if (read(a, b) > read(a, b + 1)) {
+            temp = read(a, b);
+            a = replace(a, b, read(a, b + 1));
+            a = replace(a, b + 1, temp);
+        }
+        b = b + 1;
+    }
+    d = d + 1;
+}
+print(a);

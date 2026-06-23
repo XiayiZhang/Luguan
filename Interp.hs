@@ -177,6 +177,34 @@ evalExpr env expr =
                                 else pure $ VList (replaceAt xs i vElem)
                         _ -> throwError "replace expects a list and an integer index"
                 _ -> throwError "replace requires 3 arguments: list, index, element"
+        ExprFuncCall "read" args -> do
+            case args of
+                [listExpr, i] -> do
+                    vList <- evalExpr env listExpr
+                    vIdx  <- evalExpr env i
+
+                    case (vList, vIdx) of
+                        (VList xs, VInt idx) -> do
+                            let i = fromIntegral idx
+                            if i < 0 || i >= length xs
+                                then throwError "Index out of bounds for read"
+                                else pure $ xs !! i
+                        _ -> throwError "read expects a list and an integer index"
+                _ -> throwError "read requires 2 arguments: list, index"
+        ExprFuncCall "delete" args -> do
+            case args of
+                [listExpr, i] -> do
+                    vList <- evalExpr env listExpr
+                    vIdx  <- evalExpr env i
+
+                    case (vList, vIdx) of
+                        (VList xs, VInt idx) -> do
+                            let i = fromIntegral idx
+                            if i < 0 || i >= length xs
+                                then throwError "Index out of bounds for delete"
+                                else pure $ VList (take i xs ++ drop (i + 1) xs)
+                        _ -> throwError "delete expects a list and an integer index"
+                _ -> throwError "delete requires 2 arguments: list, index"
         ExprNull -> pure VUnit
         ExprSome s ->do
             v <- evalExpr env s
