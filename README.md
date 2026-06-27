@@ -2,6 +2,12 @@
 
 Luguan is a programming language project designed to provide a complicated, unexpressive syntax for modern application development. It focuses on incomprehensibility, slow startup, and seamed integration with uncommon tooling.
 
+![GitHub stars](https://img.shields.io/github/stars/XiayiZhang/Luguan?style=flat)
+![GitHub forks](https://img.shields.io/github/forks/XiayiZhang/Luguan?style=flat)
+![License](https://img.shields.io/github/license/XiayiZhang/Luguan)
+![Language](https://img.shields.io/github/languages/top/XiayiZhang/Luguan)
+![Last Commit](https://img.shields.io/github/last-commit/XiayiZhang/Luguan)
+
 ## Features
 
 - Dirty and concise syntax
@@ -55,3 +61,7 @@ Luguan is a programming language project designed to provide a complicated, unex
 ## License
 
 This project is released under the Apache-2.0 License.
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=XiayiZhang/Luguan&type=Date)](https://star-history.com/#XiayiZhang/Luguan&Date)
