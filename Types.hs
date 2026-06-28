@@ -31,6 +31,7 @@ data BinOp
 
 data Stmt
     = Assign VarName Expr
+    |Return Expr
     | If Expr [Stmt] [Stmt]
     | While Expr [Stmt]
     | Input VarName

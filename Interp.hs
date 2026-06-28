@@ -11,6 +11,7 @@ import Types
 import Parser
 import Control.Monad.Except
 import qualified Data.Map.Strict as Map
+import Data.List (intercalate)
 import Brainfuck (bf)
 
 data Value
@@ -19,11 +20,12 @@ data Value
     | VUnit
     | VString String
     | VList [Value]
-    |VSome Value
+    | VSome Value
     deriving (Eq, Show)
 
 type Env = Map.Map String Value
 type Eval a = ExceptT String IO a
+type FuncEnv = Map.Map String Func
 
 insertAt :: Int -> a -> [a] -> [a]
 insertAt i x xs = take i xs ++ [x] ++ drop i xs
@@ -45,31 +47,33 @@ runSource src =
         Right prog -> runProgram prog
 
 evalProgram :: Env -> Program -> Eval Env
-evalProgram env (Program _ stmts) = evalStmts env stmts
+evalProgram env (Program funcs stmts) =
+    let fenv = Map.fromList [(name, f) | f@(Func name _ _ _) <- funcs]
+    in evalStmts fenv env stmts
 
-evalStmts :: Env -> [Stmt] -> Eval Env
-evalStmts env [] = pure env
-evalStmts env (s:ss) = do
-    env' <- evalStmt env s
-    evalStmts env' ss
+evalStmts :: FuncEnv -> Env -> [Stmt] -> Eval Env
+evalStmts fenv env [] = pure env
+evalStmts fenv env (s:ss) = do
+    env' <- evalStmt fenv env s
+    evalStmts fenv env' ss
 
-evalStmt :: Env -> Stmt -> Eval Env
-evalStmt env stmt =
+evalStmt :: FuncEnv -> Env -> Stmt -> Eval Env
+evalStmt fenv env stmt =
     case stmt of
         Assign name expr -> do
-            v <- evalExpr env expr
+            v <- evalExpr fenv env expr
             pure (Map.insert name v env)
 
         If cond thenBranch elseBranch -> do
-            VBool b <- evalExpr env cond
+            VBool b <- evalExpr fenv env cond
             if b
-                then evalStmts env thenBranch
-                else evalStmts env elseBranch
+                then evalStmts fenv env thenBranch
+                else evalStmts fenv env elseBranch
 
         While cond body ->
             let loop e = do
-                    VBool b <- evalExpr e cond
-                    if b then evalStmts e body >>= loop else pure e
+                    VBool b <- evalExpr fenv e cond
+                    if b then evalStmts fenv e body >>= loop else pure e
             in loop env
 
         Input name -> do
@@ -79,12 +83,10 @@ evalStmt env stmt =
                 _ -> throwError "输入不是整数"
 
         Print expr -> do
-            v <- evalExpr env expr
+            v <- evalExpr fenv env expr
             liftIO (putStrLn (showValue v))
             pure env
-
-        Block stmts -> evalStmts env stmts
-
+        Block stmts -> evalStmts fenv env stmts
         {-ExprIndex arrExpr idxExpr -> do
             VList vec <- evalExpr env arrExpr
             VInt idx <- evalExpr env idxExpr
@@ -94,9 +96,9 @@ evalStmt env stmt =
             else pure (vec !! i)-}
             
         AssignIndex arrExpr idxExpr valExpr -> do
-            arrVal <- evalExpr env arrExpr
-            idxVal <- evalExpr env idxExpr
-            newVal <- evalExpr env valExpr
+            arrVal <- evalExpr fenv env arrExpr
+            idxVal <- evalExpr fenv env idxExpr
+            newVal <- evalExpr fenv env valExpr
             case (arrVal, idxVal) of
                 (VList vec, VInt idx) -> do
                     let i = fromIntegral idx
@@ -111,8 +113,8 @@ evalStmt env stmt =
                                 _ -> throwError "Left side of index assignment must be a variable"
                 _ -> throwError "Index assignment requires an array and an integer index"
 
-evalExpr :: Env -> Expr -> Eval Value
-evalExpr env expr =
+evalExpr :: FuncEnv -> Env -> Expr -> Eval Value
+evalExpr fenv env expr =
     case expr of
         ExprLit lit -> evalLit lit
         ExprVar name ->
@@ -120,18 +122,18 @@ evalExpr env expr =
                 Just v -> pure v
                 Nothing -> throwError ("未定义变量: " ++ name)
         ExprBinOp op a b -> do
-            va <- evalExpr env a
-            vb <- evalExpr env b
+            va <- evalExpr fenv env a
+            vb <- evalExpr fenv env b
             evalBinOp op va vb
         ExprNot e -> do
-            VBool v <- evalExpr env e
+            VBool v <- evalExpr fenv env e
             pure (VBool (not v))
         --ExprFuncCall _ _ -> throwError "函数调用未实现"
         ExprFuncCall "bf" args -> do -- 2026.5.30 1:38
             case args of
                 [listArg, strArg] -> do
-                    vList <- evalExpr env listArg
-                    vStr  <- evalExpr env strArg
+                    vList <- evalExpr fenv env listArg
+                    vStr  <- evalExpr fenv env strArg
                     ints <- case vList of
                         VList vs -> mapM extractInt vs
                         _ -> throwError "bf arg1 must a list"
@@ -147,12 +149,13 @@ evalExpr env expr =
                 extractInt :: Value -> Eval Integer
                 extractInt (VInt n) = pure n
                 extractInt _        = throwError "列表中的元素不是整数"
+
         ExprFuncCall "insert" args -> do
             case args of
                 [listExpr, idxExpr, elemExpr] -> do
-                    vList <- evalExpr env listExpr
-                    vIdx  <- evalExpr env idxExpr
-                    vElem <- evalExpr env elemExpr
+                    vList <- evalExpr fenv env listExpr
+                    vIdx  <- evalExpr fenv env idxExpr
+                    vElem <- evalExpr fenv env elemExpr
 
                     case (vList, vIdx) of
                         (VList xs, VInt idx) -> do
@@ -162,26 +165,28 @@ evalExpr env expr =
                                 else pure $ VList (insertAt i vElem xs)
                         _ -> throwError "insert expects a list and an integer index"
                 _ -> throwError "insert requires 3 arguments: list, index, element"
+
         ExprFuncCall "replace" args -> do
             case args of
                 [listExpr, idxExpr, elemExpr] -> do
-                    vList <- evalExpr env listExpr
-                    vIdx  <- evalExpr env idxExpr
-                    vElem <- evalExpr env elemExpr
+                    vList <- evalExpr fenv env listExpr
+                    vIdx  <- evalExpr fenv env idxExpr
+                    vElem <- evalExpr fenv env elemExpr
 
                     case (vList, vIdx) of
                         (VList xs, VInt idx) -> do
                             let i = fromIntegral idx
-                            if i < 0 || i > length xs   -- 允许在末尾插入（i == length）
-                                then throwError "replace out of bounds for insert"
+                            if i < 0 || i >= length xs
+                                then throwError "replace out of bounds"
                                 else pure $ VList (replaceAt xs i vElem)
                         _ -> throwError "replace expects a list and an integer index"
                 _ -> throwError "replace requires 3 arguments: list, index, element"
+
         ExprFuncCall "read" args -> do
             case args of
                 [listExpr, i] -> do
-                    vList <- evalExpr env listExpr
-                    vIdx  <- evalExpr env i
+                    vList <- evalExpr fenv env listExpr
+                    vIdx  <- evalExpr fenv env i
 
                     case (vList, vIdx) of
                         (VList xs, VInt idx) -> do
@@ -191,11 +196,12 @@ evalExpr env expr =
                                 else pure $ xs !! i
                         _ -> throwError "read expects a list and an integer index"
                 _ -> throwError "read requires 2 arguments: list, index"
+
         ExprFuncCall "delete" args -> do
             case args of
                 [listExpr, i] -> do
-                    vList <- evalExpr env listExpr
-                    vIdx  <- evalExpr env i
+                    vList <- evalExpr fenv env listExpr
+                    vIdx  <- evalExpr fenv env i
 
                     case (vList, vIdx) of
                         (VList xs, VInt idx) -> do
@@ -205,15 +211,30 @@ evalExpr env expr =
                                 else pure $ VList (take i xs ++ drop (i + 1) xs)
                         _ -> throwError "delete expects a list and an integer index"
                 _ -> throwError "delete requires 2 arguments: list, index"
+
         ExprNull -> pure VUnit
-        ExprSome s ->do
-            v <- evalExpr env s
+        ExprSome s -> do
+            v <- evalExpr fenv env s
             pure (VSome v)
         ExprMatch {} -> throwError "match 表达式暂不支持"
         ExprString s -> pure (VString s)
         ExprList es -> do
-            vs <- mapM (evalExpr env) es
-            pure (VList vs)  
+            vs <- mapM (evalExpr fenv env) es
+            pure (VList vs)
+        _ -> throwError "未实现的表达式形式"
+
+evalExpr fenv env (ExprFuncCall name args) =
+    case Map.lookup name fenv of
+        Just (Func _ params _ body) -> do
+            if length params /= length args
+                then throwError "参数数量不匹配"
+                else do
+                    vals <- mapM (evalExpr fenv env) args
+                    let paramNames = map fst params
+                        localEnv = Map.fromList (zip paramNames vals)
+                    _ <- evalStmts fenv (Map.union localEnv env) body
+                    pure VUnit
+        Nothing -> throwError ("未知函数: " ++ name)
 
 evalLit :: Lit -> Eval Value
 evalLit = \case
@@ -252,4 +273,4 @@ showValue = \case
     VBool b -> show b
     VUnit -> "()"
     VString s -> s
-    VList l -> show l
+    VList l -> "[" ++ intercalate ", " (map showValue l) ++ "]"

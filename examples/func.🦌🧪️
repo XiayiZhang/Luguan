@@ -1,0 +1,9 @@
+func a(n: int ) : int {
+	if (n < 0){
+		return 0;
+	} else {
+		return (n * a(n-1)) ;
+	}
+}
+
+print(a(4));

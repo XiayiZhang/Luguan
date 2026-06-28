@@ -9,6 +9,7 @@ import Text.Parsec
 import Text.Parsec.Expr
 import qualified Text.Parsec.Token as Token
 import Text.Parsec.Language (emptyDef)
+import Text.Parsec.String (Parser)
 
 readlgFile :: String -> FilePath -> IO (Either String String)
 readlgFile ext path = do
@@ -117,9 +118,29 @@ typeParser =  TypeInt <$ reserved "int"
 blockParser :: Parsec String () [Stmt]
 blockParser = braces (many stmtParser)
 
+returnStmt :: Parser Stmt
+returnStmt = do
+    reserved "return"
+    expr <- expression
+    semi   -- 分号可选，取决于你的语言
+    return $ Return expr
+
+assignStmt :: Parser Stmt
+assignStmt = do
+    name <- identifier
+    reservedOp "="
+    expr <- expression
+    optional semi
+    return $ Assign name expr
+
+expression :: ParsecT String () Identity Expr
+expression = exprParser
+
 stmtParser :: Parsec String () Stmt
 stmtParser = choice
-    [ ifStmtParser
+    [try returnStmt
+    , try assignStmt    
+    , ifStmtParser
     , whileStmtParser
     , inputStmtParser
     , printStmtParser
